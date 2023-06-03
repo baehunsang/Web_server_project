@@ -13,4 +13,15 @@ $ ./test.sh (for testing persistence connection)
 ```
 
 ## IO multiflexing principle
-![IO MUX](https://github.com/baehunsang/Web_server_project/assets/60999807/cacae70c-464a-46fd-a8b3-331719d8aaba)
+
+```
+loop:
+  select -> find ready state sockets
+  for socket in socket set:
+    if there are ready state socket:
+      if it is server socket:
+        accept new connection
+        add new connection to socket set(fd_set)
+      else:
+        handle its own request 
+```
