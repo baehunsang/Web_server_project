@@ -12,7 +12,9 @@ int main(){
     struct hostent *server;
 
     char buffer[BUFFER_SIZE];
-
+    char* http_get_request = "GET / HTTP/1.1\r\n";
+    char* http_post_request = "POST / HTTP/1.1\r\n";
+    char* http_bad_file_request = "GET /hello.txt HTTP/1.1\r\n";
     //socket
     portno = atoi("8080");
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -34,10 +36,19 @@ int main(){
         error("ERROR connecting");
     
     //persistency check
-    for(int i=0; i< MAX_ITER; i++){
-        send(sockfd, "Hello server", 12, 0);
-        recv(sockfd, buffer, BUFFER_SIZE, 0);
-        printf("SERVER REPLY NO. %d: %s\n", i+1, buffer);
-    }
+    memset(buffer, 0, BUFFER_SIZE);
+    send(sockfd, http_get_request, strlen(http_get_request), 0);
+    recv(sockfd, buffer, BUFFER_SIZE, 0);
+    printf("SERVER REPLY NO. %d: %s\n", 1, buffer);
+    
+    memset(buffer, 0, BUFFER_SIZE);
+    send(sockfd, http_post_request, strlen(http_post_request), 0);
+    recv(sockfd, buffer, BUFFER_SIZE, 0);
+    printf("SERVER REPLY NO. %d: %s\n", 2, buffer);
+
+    memset(buffer, 0, BUFFER_SIZE);
+    send(sockfd, http_bad_file_request, strlen(http_bad_file_request), 0);
+    recv(sockfd, buffer, BUFFER_SIZE, 0);
+    printf("SERVER REPLY NO. %d: %s\n", 3, buffer);
     close(sockfd);
 }

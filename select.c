@@ -4,21 +4,98 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/select.h>
+#define BUF_SIZE 1024
 
-int make_HTTP_responce(int client_socket, char* request, char* responce, fd_set* current_sockets){
+char* resources_dir = "./resources";
+
+void send_file(int new_sock, char* path) {
+    char responce[BUF_SIZE];
+    char file_path[BUF_SIZE];
+    snprintf(file_path, sizeof(file_path), "%s/%s", resources_dir, path);
+
+    FILE* file = fopen(file_path, "rb");
+    char buffer[BUF_SIZE];
+
+    if (file != NULL) {
+        fseek(file, 0, SEEK_END);
+        long int size = ftell(file);
+        fseek(file , 0, SEEK_SET);
+
+        if(!strcmp(path, "index.html")){
+            sprintf(responce, "HTTP/1.1 200 OK\r\n"
+                    "Connection: Keep-Alive\r\n"
+                    "keep-alive: timeout=5, max=30\r\n"
+                    "Content-length: %ld\r\n"
+                    "Content-Type: text/html\r\n\r\n", size);
+        }
+        else if(!strcmp(path, "script.js")){
+            sprintf(responce, "HTTP/1.1 200 OK\r\n"
+                    "Connection: Keep-Alive\r\n"
+                    "keep-alive: timeout=5, max=30\r\n"
+                    "Content-length: %ld\r\n"
+                    "Content-Type: text/js\r\n\r\n", size);
+        }
+        else if(!strcmp(path, "gr-small.png")){
+            sprintf(responce, "HTTP/1.1 200 OK\r\n"
+                    "Connection: Keep-Alive\r\n"
+                    "keep-alive: timeout=5, max=30\r\n"
+                    "Content-length: %ld\r\n"
+                    "Content-Type: image/png\r\n\r\n", size);
+        }
+        else if(!strcmp(path, "gr-large.jpg")){
+            sprintf(responce, "HTTP/1.1 200 OK\r\n"
+                    "Connection: Keep-Alive\r\n"
+                    "keep-alive: timeout=5, max=30\r\n"
+                    "Content-length: %ld\r\n"
+                    "Content-Type: image/jpg\r\n\r\n", size);
+        }
+        send(new_sock, responce, strlen(responce), 0);
+        size_t n;
+        while((n = fread(buffer, 1, BUF_SIZE, file)) > 0) {
+            send(new_sock, buffer, n, 0);
+        }
+        fclose(file);
+    } else {
+        sprintf(responce, "HTTP/1.1 404 Not Found\r\n");
+        send(new_sock, responce, strlen(responce), 0);
+    }
+}
+
+
+void process_request(int client_socket, char* request){
+    char method[5];
+    char path[BUF_SIZE];
+    char connection_status[BUF_SIZE];
+    sscanf(request, "%s %s", method, path);
+
+    if (strcmp(method, "GET") == 0) {
+        if (path[0] == '/') {
+            memmove(path, path + 1, strlen(path));
+        }
+        if (strlen(path) == 0) {
+            strcpy(path, "index.html");
+        }
+        
+        send_file(client_socket, path);
+    } else {
+        // Unsupported method
+        char* response = "HTTP/1.1 400 Bad Request\r\n";
+        send(client_socket, response, strlen(response), 0);
+    }
+}
+
+int send_HTTP_responce(int client_socket, char* request, fd_set* current_sockets){
     if(!recv(client_socket, request, 1024, 0)){
         close(client_socket);
         FD_CLR(client_socket, current_sockets);
         return -1;
     }
-    printf("Client: %s\n", request);
-    send(client_socket, responce, 1024, 0);
+    process_request(client_socket, request);
     return 0;
 }
 
 int main(){
-    char message[1024] = "hello\n";
-    char buffer[1024] = {0};
+    char buffer[BUF_SIZE] = {0};
     int port = 8080;
 
     //initialize server data
@@ -68,8 +145,9 @@ int main(){
                     }
                 }
                 else{
-                    //process request{
-                    if(make_HTTP_responce(i, buffer, message, &current_sockets) < 0){
+                    //process request
+                    memset(buffer, 0, BUF_SIZE);
+                    if(send_HTTP_responce(i, buffer, &current_sockets) < 0){
                         continue;
                     }
                 }
