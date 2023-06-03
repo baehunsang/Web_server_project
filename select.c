@@ -5,8 +5,19 @@
 #include <arpa/inet.h>
 #include <sys/select.h>
 
+int make_HTTP_responce(int client_socket, char* request, char* responce, fd_set* current_sockets){
+    if(!recv(client_socket, request, 1024, 0)){
+        close(client_socket);
+        FD_CLR(client_socket, current_sockets);
+        return -1;
+    }
+    printf("Client: %s\n", request);
+    send(client_socket, responce, 1024, 0);
+    return 0;
+}
+
 int main(){
-    char message[1024] = "hello client\n";
+    char message[1024] = "hello\n";
     char buffer[1024] = {0};
     int port = 8080;
 
@@ -57,14 +68,10 @@ int main(){
                     }
                 }
                 else{
-                    //process request
-                    if(!recv(i, buffer, 1024, 0)){
-                        close(i);
-                        FD_CLR(i, &current_sockets);
+                    //process request{
+                    if(make_HTTP_responce(i, buffer, message, &current_sockets) < 0){
                         continue;
                     }
-                    printf("Client: %s\n", buffer);
-                    send(i, message, 1024, 0);
                 }
             }
         }
