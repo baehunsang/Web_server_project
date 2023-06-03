@@ -13,4 +13,4 @@ $ ./test.sh (for testing persistence connection)
 ```
 
 ## IO multiflexing principle
-![IMG_1814](https://github.com/baehunsang/Web_server_project/assets/60999807/bc4d3c43-3e17-4f28-85a4-eac21fd52983)
+![IO MUX](https://github.com/baehunsang/Web_server_project/assets/60999807/cacae70c-464a-46fd-a8b3-331719d8aaba)
