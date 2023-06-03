@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <sys/select.h>
 #define BUFFER_SIZE 1024
+#define MAX_ITER 3
 int main(){
     int sockfd, portno, n;
     struct sockaddr_in serv_addr;
@@ -32,8 +33,11 @@ int main(){
     if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) 
         error("ERROR connecting");
     
-    send(sockfd, "Hello server", 12, 0);
-    recv(sockfd, buffer, BUFFER_SIZE, 0);
-    printf("SERVER: %s\n", buffer);
+    //persistency check
+    for(int i=0; i< MAX_ITER; i++){
+        send(sockfd, "Hello server", 12, 0);
+        recv(sockfd, buffer, BUFFER_SIZE, 0);
+        printf("SERVER REPLY NO. %d: %s\n", i+1, buffer);
+    }
     close(sockfd);
 }

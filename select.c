@@ -58,11 +58,13 @@ int main(){
                 }
                 else{
                     //process request
-                    recv(i, buffer, 1024, 0);
+                    if(!recv(i, buffer, 1024, 0)){
+                        close(i);
+                        FD_CLR(i, &current_sockets);
+                        continue;
+                    }
                     printf("Client: %s\n", buffer);
                     send(i, message, 1024, 0);
-                    close(i);
-                    FD_CLR(i, &current_sockets);
                 }
             }
         }
