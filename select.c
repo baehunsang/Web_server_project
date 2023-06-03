@@ -31,22 +31,41 @@ int main(){
 
     listen(server_sock, 5);
 
+    //client socket info
     int client_socket;
+    int max_socket;
     struct sockaddr_in client_addr;
     socklen_t clilen = sizeof(client_addr);
 
+    fd_set current_sockets, tmp_sockets;
+    FD_ZERO(&current_sockets);
+    FD_SET(server_sock, &current_sockets);
+    max_socket = server_sock;
+
     while(1){
-        client_socket = accept(server_sock, &client_addr, &clilen);
+        tmp_sockets = current_sockets;
+        select(max_socket + 1, &tmp_sockets, NULL, NULL, NULL);
 
-        if (client_socket < 0) {
-                continue;
+        for(int i=0; i <= max_socket; i++){
+            if(FD_ISSET(i, &tmp_sockets)){
+                //handle new connection
+                if(i == server_sock){
+                    client_socket = accept(server_sock, (struct sockaddr*)&client_addr, &clilen);
+                    FD_SET(client_socket, &current_sockets);
+                    if(client_socket > max_socket){
+                        max_socket = client_socket;
+                    }
+                }
+                else{
+                    //process request
+                    recv(i, buffer, 1024, 0);
+                    printf("Client: %s\n", buffer);
+                    send(i, message, 1024, 0);
+                    close(i);
+                    FD_CLR(i, &current_sockets);
+                }
+            }
         }
-
-        //process request
-        recv(client_socket, buffer, 1024, 0);
-        printf("Client: %s\n", buffer);
-        send(client_socket, message, 1024, 0);
-        close(client_socket);
     }
     close(server_sock);
 
