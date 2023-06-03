@@ -6,7 +6,7 @@
 #include <sys/select.h>
 #define BUF_SIZE 1024
 
-char* resources_dir = "./resources";
+char resources_dir[BUF_SIZE];
 
 void send_file(int new_sock, char* path) {
     char responce[BUF_SIZE];
@@ -94,9 +94,15 @@ int send_HTTP_responce(int client_socket, char* request, fd_set* current_sockets
     return 0;
 }
 
-int main(){
+int main(int argc, char* argv[]){
+    if(argc != 3){
+        perror("undefined usage");
+        exit(1);
+    }
     char buffer[BUF_SIZE] = {0};
-    int port = 8080;
+    int port = atoi(argv[1]);
+    strncpy(resources_dir, argv[2], BUF_SIZE - 1);
+    resources_dir[BUF_SIZE - 1] = '\0';
 
     //initialize server data
     int server_sock;
