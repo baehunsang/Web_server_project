@@ -86,8 +86,8 @@ void process_request(int client_socket, char* request){
 
 int send_HTTP_responce(int client_socket, char* request, fd_set* current_sockets){
     if(!recv(client_socket, request, 1024, 0)){
-        close(client_socket);
-        FD_CLR(client_socket, current_sockets);
+        //close(client_socket);
+        //FD_CLR(client_socket, current_sockets);
         return -1;
     }
     process_request(client_socket, request);
